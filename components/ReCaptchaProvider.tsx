@@ -5,7 +5,7 @@ import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 export default function ReCaptchaProvider({ children }: { children: React.ReactNode }) {
   return (
     <GoogleReCaptchaProvider
-      reCaptchaKey={process.env.RECAPTCHA_SITE_KEY!}
+      reCaptchaKey={process.env.RECAPTCHA_SITE_KEY || "6LeunLgrAAAAAGRRITKg_jklzg8GU69Ldo3A11vD"}
       scriptProps={{
         async: true,
         defer: true,
