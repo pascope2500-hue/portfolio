@@ -2,6 +2,7 @@ import type React from "react"
 import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,7 +20,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <GoogleReCaptchaProvider
+          reCaptchaKey={process.env.RECAPTCHA_SITE_KEY!}
+          scriptProps={{
+            async: true,
+            defer: true,
+            appendTo: "head",
+          }}
+        >
           {children}
+          </GoogleReCaptchaProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
 
-  const { name, email, phone, subject, message, recaptchaToken } = req.body;
+  const { name, email, phone, subject, message, token } = req.body;
 
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ message: "Please fill in all required fields." });
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const recaptchaRes = await fetch(
-    `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${recaptchaToken}`,
+    `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecret}&response=${token}`,
     { method: "POST" }
   );
   const recaptchaData = await recaptchaRes.json();
