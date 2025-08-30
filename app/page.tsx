@@ -1,3 +1,4 @@
+'use client';
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,14 +10,67 @@ import Link from "next/link"
 import ProjectCard from "@/components/project-card"
 import ExperienceCard from "@/components/experience-card"
 import SkillBadge from "@/components/skill-badge"
+import { useState } from "react"
+import ReCAPTCHA from "react-google-recaptcha"
 
 export default function Home() {
+  // Add these states at the top of your component
+  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
+
+  const handleRecaptcha = (token: string | null) => {
+    setRecaptchaToken(token);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    // Simple validation
+    if (!form.name || !form.email || !form.subject || !form.message) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (!recaptchaToken) {
+      setError("Please verify that you are not a robot.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, recaptchaToken }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess("Message sent successfully!");
+        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+        setRecaptchaToken(null);
+      } else {
+        setError(data.message || "Failed to send message.");
+      }
+    } catch {
+      setError("Failed to send message.");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight">Holiq Ibrahim</span>
+            <span className="text-xl font-bold tracking-tight">Pascal Ndacyayisenga</span>
           </div>
           <nav className="hidden md:flex gap-6">
             <Link href="#about" className="text-sm font-medium transition-colors hover:text-primary">
@@ -52,12 +106,11 @@ export default function Home() {
           <div className="flex flex-col md:flex-row gap-8 items-center">
             <div className="md:w-2/3 space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
-                Hi, I'm <span className="text-primary">Holiq Ibrahim</span>
+                Hi, I'm <span className="text-primary">Pascal Ndacyayisenga</span>
               </h1>
-              <h2 className="text-2xl md:text-3xl font-medium text-muted-foreground">Web Developer</h2>
+              <h2 className="text-2xl md:text-3xl font-medium text-muted-foreground">Full Stack Web Developer</h2>
               <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed md:leading-loose">
-                A passionate web developer specializing in Laravel with a drive to explore new technologies. I adapt
-                quickly to new environments, allowing me to integrate seamlessly with diverse teams and projects.
+                Motivated Web Developer and eCommerce specialist with strong experience in front-end and back-end development. Skilled in database management, RESTful APIs, and digital sales operations. Adept at delivering scalable web solutions and supporting businesses in optimizing their online presence.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button asChild className="transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md">
@@ -74,33 +127,13 @@ export default function Home() {
             </div>
             <div className="md:w-1/3 flex justify-center">
               <Avatar className="w-48 h-48 border-4 border-primary/20 shadow-lg transition-all duration-500 hover:border-primary/40 hover:shadow-xl">
-                <AvatarImage src="/placeholder.svg?height=192&width=192" alt="Holiq Ibrahim" />
-                <AvatarFallback className="text-4xl">HI</AvatarFallback>
+                <AvatarImage src="/202202200000023.jpg?height=192&width=192" alt="Pascal Ndacyayisenga" />
+                <AvatarFallback className="text-4xl">PN</AvatarFallback>
               </Avatar>
             </div>
           </div>
           <div className="flex flex-wrap gap-4 justify-center md:justify-start pt-6">
-            <Link href="https://github.com/holiq" target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
-              >
-                <Github className="h-5 w-5" />
-                <span className="sr-only">GitHub</span>
-              </Button>
-            </Link>
-            <Link href="https://linkedin.com/in/holiq-ibrahim" target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
-              >
-                <Linkedin className="h-5 w-5" />
-                <span className="sr-only">LinkedIn</span>
-              </Button>
-            </Link>
-            <Link href="mailto:holiq.ibrahim376@gmail.com">
+            <Link href="mailto:pascope250@gmail.com">
               <Button
                 variant="outline"
                 size="icon"
@@ -110,53 +143,60 @@ export default function Home() {
                 <span className="sr-only">Email</span>
               </Button>
             </Link>
+
+             <Link href="https://github.com/pascope250">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
+              >
+                <Github className="h-5 w-5" />
+                <span className="sr-only">Github</span>
+              </Button>
+            </Link>
+
+             <Link href="https://www.linkedin.com/in/pascal-ndacyayisenga-605390282/">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
+              >
+                <Linkedin className="h-5 w-5" />
+                <span className="sr-only">LinkedIn</span>
+              </Button>
+            </Link>
+            {/* Add more social links if available */}
           </div>
         </section>
 
-        {/* About Section - Refactored */}
+        {/* About Section */}
         <section id="about" className="py-12 scroll-mt-20">
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <h2 className="text-3xl font-extrabold tracking-tight">About Me</h2>
               <div className="h-px flex-1 bg-border"></div>
             </div>
-
             <div className="max-w-4xl mx-auto bg-card rounded-xl p-6 md:p-8 shadow-sm border">
               <div className="space-y-6">
                 <p className="text-xl font-medium leading-relaxed md:leading-loose">
-                  I'm a passionate <span className="text-primary font-semibold">Web Developer</span> with specialized
-                  expertise in Laravel and PHP ecosystems.
+                  I'm a <span className="text-primary font-semibold">Full Stack Web Developer</span> and eCommerce specialist with a passion for building scalable web solutions.
                 </p>
-
                 <div className="space-y-5 text-base md:text-lg leading-relaxed md:leading-loose text-card-foreground/90">
                   <p>
-                    My journey in web development began with a curiosity about how websites work, which quickly evolved
-                    into a passion for building robust, user-friendly applications. Over the years, I've honed my skills
-                    through hands-on experience at organizations like KoalaFacade, Seccodeid, and Ekskul.co.id, where
-                    I've contributed to various projects ranging from e-learning platforms to community forums.
+                    My journey in tech began with a strong interest in how digital solutions can transform businesses. Over the years, I have developed expertise in both front-end and back-end development, database management, and digital sales operations.
                   </p>
-
                   <p>
-                    What drives me is the continuous learning process that comes with web development. I thrive in
-                    environments where I can explore new technologies and methodologies, constantly pushing the
-                    boundaries of what I can create. My experience with Laravel has given me a strong foundation in
-                    building scalable, maintainable applications, but I'm always eager to expand my toolkit.
+                    I am skilled in designing and implementing RESTful APIs, building responsive interfaces, and managing full-stack projects from planning to deployment. My experience spans working independently as a freelancer and collaborating with international teams.
                   </p>
-
                   <blockquote className="pl-4 border-l-4 border-primary/50 italic my-6 md:my-8 py-2">
                     <p className="text-lg md:text-xl font-light">
-                      I believe in writing clean, maintainable code that solves real problems. I value collaboration and
-                      knowledge sharing within development teams.
+                      I value problem-solving, teamwork, and continuous learning. My goal is to deliver high-quality solutions that help businesses grow online.
                     </p>
                   </blockquote>
-
                   <p>
-                    When I'm not coding, I enjoy contributing to open-source projects and sharing knowledge with the
-                    developer community. I approach challenges with curiosity and persistence, always committed to
-                    delivering high-quality solutions that meet both user needs and business objectives.
+                    Outside of coding, I enjoy learning new languages and exploring the latest trends in technology and eCommerce.
                   </p>
                 </div>
-
                 <div className="flex flex-wrap gap-4 pt-4">
                   <Button
                     asChild
@@ -168,17 +208,7 @@ export default function Home() {
                       <ExternalLink className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    asChild
-                    className="transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md hover:bg-accent"
-                  >
-                    <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                      Download Resume
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
+                  {/* Add resume download if available */}
                 </div>
               </div>
             </div>
@@ -194,48 +224,33 @@ export default function Home() {
             </div>
             <div className="grid gap-6">
               <ExperienceCard
-                title="Maintainer"
-                company="KoalaFacade"
-                location="Palu, Indonesia"
-                type="Volunteer"
-                period="November 2022 - Present"
-                description="KoalaFacade is an organization that develops various open source packages in the Laravel ecosystem."
-                responsibilities={[
-                  "Review and merge pull requests submitted by contributors, ensuring each code meets established standards.",
-                  "Identify and fix bugs, and perform regular updates to maintain package performance and stability.",
-                  "Maintain and improve documentation, providing explanations and examples for usage and ensuring documentation is always up-to-date and relevant to the latest version of the released package.",
-                  "Collaborate with other maintainers and contributors in implementing new features and fixing various issues or bugs that arise.",
-                ]}
-              />
-
-              <ExperienceCard
                 title="Web Developer"
-                company="Seccodeid"
-                location="Yogyakarta, Indonesia"
-                type="Volunteer"
-                period="April 2020 - Present"
-                description="Seccodeid is a free discussion forum platform from Indonesia that discusses computer technology, programming, hacking, and various other information."
+                company="Freelancer"
+                location="Remote / Kigali"
+                type="Freelance"
+                period="2021 - Present"
+                description="Delivered full-stack web solutions for small businesses and startups."
                 responsibilities={[
-                  "Build and manage the Seccodeid forum using Laravel framework and Bootstrap.",
-                  "Maintain the forum as an admin, perform database backups, and identify and fix emerging bugs.",
-                  "Create the seccodeid.com landing page using TailwindCSS, ensuring responsive design and optimal SEO.",
-                  "Interact with other admins and users to ensure no violations of terms and policies, and create a positive and beneficial discussion environment.",
+                  "Designed and implemented database schemas for scalable web applications.",
+                  "Built and deployed RESTful APIs using Express.js with user authentication & CRUD operations.",
+                  "Developed responsive front-end interfaces with HTML, CSS, and JavaScript.",
+                  "Integrated MySQL/MariaDB databases with Node.js backends for dynamic content delivery.",
+                  "Managed full-stack projects independently, from planning to deployment.",
+                  "Delivered tailored website and eCommerce solutions for clients."
                 ]}
               />
-
               <ExperienceCard
-                title="Backend Developer"
-                company="Ekskul.co.id"
-                location="Tangerang, Indonesia"
-                type="Part-time"
-                period="June 2021 - October 2021"
-                description="Ekskul.co.id is an e-learning platform in Indonesia."
+                title="Product Manager"
+                company="Funfu Ltd China-Jihnua"
+                location="China-Jihnua"
+                type="Full-time"
+                period="2024 - 2025"
+                description="Managed product selection, quality, and logistics for eCommerce operations."
                 responsibilities={[
-                  "Create REST API using Laravel framework for the e-learning platform.",
-                  "Integrate Midtrans payment gateway for the course ordering system and handle the payment process, ensuring smooth transactions.",
-                  "Integrate notification features using FCM (Firebase Cloud Message) so users can get the latest updates from the application.",
-                  "Deploy REST API on VPS and ensure all endpoints can run.",
-                  "Collaborate with the Mobile team in implementing REST API into the application and ensuring all APIs can work as they should.",
+                  "Selected and sorted products based on customer demand and seasonal trends.",
+                  "Labeled, packaged, and stocked products, ensuring proper warehouse organization.",
+                  "Checked product quality before shipping and assisted with inventory management.",
+                  "Collaborated with logistics and customer service teams to streamline order fulfillment."
                 ]}
               />
             </div>
@@ -246,45 +261,52 @@ export default function Home() {
         <section id="projects" className="py-12 scroll-mt-20">
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <h2 className="text-3xl font-extrabold tracking-tight">Projects</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight">Recent Projects</h2>
               <div className="h-px flex-1 bg-border"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ProjectCard
-                title="FilaTeam"
-                period="August 2024"
-                description="Implementation of team features based on laravel/jetstream using Filament on Laravel 11, implementing team switching features with Livewire and automatic refresh after team changes."
-                technologies={["Laravel 11", "Filament", "Livewire"]}
-                imageUrl="/placeholder.svg?height=300&width=600"
-                githubUrl="https://github.com/holiq/filateam"
+              {/* Add your real projects here */}
+
+               <ProjectCard
+                title="Logistic System"
+                period="2025"
+                description="Developed a logistic system for managing transport and logistics operations, including vehicle tracking, route planning, and order management."
+                technologies={["Node.js", "Express.js", "mariadb","Prisma", "Nextjs","TypeScript", "TailwindCSS"]}
+                imageUrl="/Understanding-Transport-Logistics.jpg?height=300&width=600"
+              />
+
+               <ProjectCard
+                title="Hobby Movies"
+                period="2025"
+                description="Developed a responsive Movie Stream platform with single movie details, movies by genre, and search functionality."
+                technologies={["Node.js", "Express.js", "mariadb", "Nextjs","TypeScript","TailwindCSS"]}
+                imageUrl="/hobbyvb.png?height=300&width=600"
               />
 
               <ProjectCard
-                title="Landing Page Seccodeid"
-                period="April 2023"
-                description="Seccodeid landing page created using TailwindCSS with responsive design and optimal SEO."
-                technologies={["TailwindCSS", "HTML", "JavaScript"]}
-                imageUrl="/placeholder.svg?height=300&width=600"
-                liveUrl="https://seccodeid.com"
+                title="Inventory Management System"
+                period="2025"
+                description="A web-based inventory and stock management system for small businesses, featuring CRUD operations, user authentication, and reporting."
+                technologies={["Node.js", "Express.js", "Mariadb", "React"]}
+                imageUrl="/inventory-in-out.png?height=300&width=600"
+              />
+              <ProjectCard
+                title="eCommerce Website"
+                period="2024"
+                description="Developed a responsive eCommerce platform with product catalog, shopping cart, and order management features."
+                technologies={["Node.js", "Express.js", "mariadb", "React","TailwindCSS"]}
+                imageUrl="/ecom.png?height=300&width=600"
               />
 
               <ProjectCard
-                title="CIlog"
-                period="May 2024 - June 2024"
-                description="A campus assignment project from the Programming course to create a blog application using CodeIgniter4 and Bootstrap, equipped with category features, post slugs, admin panel, and comments and replies."
-                technologies={["CodeIgniter4", "Bootstrap", "MySQL"]}
-                imageUrl="/placeholder.svg?height=300&width=600"
-                githubUrl="https://github.com/holiq/cilog"
+                title="School Management System"
+                period="2024"
+                description="Developed a responsive School Management System with student registration, course management, and attendance tracking features."
+                technologies={["php", "mariadb", "html","css","javascript", "jquery", "Bootstrap", "Ajax"]}
+                imageUrl="/Which-is-the-best-all-in-one-school-management-system.png?height=300&width=600"
               />
 
-              <ProjectCard
-                title="Blog Laravel"
-                period="August 2020 - September 2020"
-                description="A simple blog created with Laravel 7, Tailwind CSS, and AlpineJS, equipped with admin panel features, roles and permissions, comments and replies on posts, as well as slugs and tags on posts."
-                technologies={["Laravel 7", "Tailwind CSS", "AlpineJS", "MySQL"]}
-                imageUrl="/placeholder.svg?height=300&width=600"
-                githubUrl="https://github.com/holiq/blog-laravel"
-              />
+              
             </div>
           </div>
         </section>
@@ -293,56 +315,57 @@ export default function Home() {
         <section id="skills" className="py-12 scroll-mt-20">
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <h2 className="text-3xl font-extrabold tracking-tight">Technical Skills</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight">Technical & General Skills</h2>
               <div className="h-px flex-1 bg-border"></div>
             </div>
             <Card className="shadow-sm">
               <CardContent className="p-6">
-                <Tabs defaultValue="backend" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="backend">Backend</TabsTrigger>
-                    <TabsTrigger value="frontend">Frontend</TabsTrigger>
-                    <TabsTrigger value="database">Database</TabsTrigger>
-                    <TabsTrigger value="tools">Tools</TabsTrigger>
+                <Tabs defaultValue="technical" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="technical">Technical</TabsTrigger>
+                    <TabsTrigger value="general">General</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="backend" className="mt-6 space-y-4">
-                    <h3 className="text-xl font-semibold">Backend Technologies</h3>
-                    <div className="flex flex-wrap gap-3 mt-2">
-                      <SkillBadge name="PHP" level="Advanced" />
-                      <SkillBadge name="Laravel" level="Advanced" />
-                      <SkillBadge name="CodeIgniter" level="Intermediate" />
-                      <SkillBadge name="REST API" level="Advanced" />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="frontend" className="mt-6 space-y-4">
-                    <h3 className="text-xl font-semibold">Frontend Technologies</h3>
+                  <TabsContent value="technical" className="mt-6 space-y-4">
+                    <h3 className="text-xl font-semibold">Technical Skills</h3>
                     <div className="flex flex-wrap gap-3 mt-2">
                       <SkillBadge name="HTML" level="Advanced" />
                       <SkillBadge name="CSS" level="Advanced" />
-                      <SkillBadge name="Tailwind CSS" level="Advanced" />
-                      <SkillBadge name="Bootstrap" level="Advanced" />
-                      <SkillBadge name="JavaScript" level="Intermediate" />
-                      <SkillBadge name="Alpine.js" level="Intermediate" />
-                      <SkillBadge name="jQuery" level="Intermediate" />
+                      <SkillBadge name="JavaScript" level="Advanced" />
+                      <SkillBadge name="React" level="Intermediate" />
+                      <SkillBadge name="PHP" level="Intermediate" />
+                      <SkillBadge name="La" level="Intermediate" />
+                      <SkillBadge name="Node.js" level="Advanced" />
+                      <SkillBadge name="Nextjs" level="Advanced" />
+                      <SkillBadge name="Express.js" level="Advanced" />
+                      <SkillBadge name="TypeScript" level="Intermediate" />
+                      <SkillBadge name="TailwindCSS" level="Intermediate" />
+                      <SkillBadge name="RESTful APIs" level="Advanced" />
+                      <SkillBadge name="User Authentication" level="Advanced" />
+                      <SkillBadge name="CRUD Operations" level="Advanced" />
+                      <SkillBadge name="MySQL/MariaDB" level="Intermediate" />
+                      <SkillBadge name="Git" level="Intermediate" />
+                      <SkillBadge name="npm" level="Intermediate" />
+                      <SkillBadge name="Flutter" level="Intermediate"/>
                     </div>
                   </TabsContent>
-                  <TabsContent value="database" className="mt-6 space-y-4">
-                    <h3 className="text-xl font-semibold">Database Technologies</h3>
+                  <TabsContent value="general" className="mt-6 space-y-4">
+                    <h3 className="text-xl font-semibold">General Skills</h3>
                     <div className="flex flex-wrap gap-3 mt-2">
-                      <SkillBadge name="SQL" level="Advanced" />
-                      <SkillBadge name="MySQL" level="Advanced" />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="tools" className="mt-6 space-y-4">
-                    <h3 className="text-xl font-semibold">Tools & Others</h3>
-                    <div className="flex flex-wrap gap-3 mt-2">
-                      <SkillBadge name="Git" level="Advanced" />
-                      <SkillBadge name="GitHub" level="Advanced" />
-                      <SkillBadge name="VS Code" level="Advanced" />
-                      <SkillBadge name="Postman" level="Intermediate" />
+                      <SkillBadge name="Problem-Solving & Debugging" level="Advanced" />
+                      <SkillBadge name="Inventory & Stock Management" level="Intermediate" />
+                      <SkillBadge name="Team Collaboration & Communication" level="Advanced" />
+                      <SkillBadge name="Time Management" level="Advanced" />
                     </div>
                   </TabsContent>
                 </Tabs>
+                <div className="pt-6">
+                  <h3 className="text-xl font-semibold">Languages</h3>
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    <Badge>Kinyarwanda (Native)</Badge>
+                    <Badge>English (Fluent)</Badge>
+                    <Badge>Chinese (Basic)</Badge>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -360,38 +383,35 @@ export default function Home() {
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                     <div>
-                      <CardTitle className="text-xl font-bold">Universitas Muhammadiyah Banten</CardTitle>
+                      <CardTitle className="text-xl font-bold">Musanze College / University of Jinhua</CardTitle>
                       <CardDescription className="text-base font-medium mt-1">
-                        Teknik Informatika (Informatics Engineering)
+                        Advanced Diploma In Information and Communication Technology
                       </CardDescription>
                     </div>
-                    <Badge className="w-fit mt-1 sm:mt-0">2022 - Present</Badge>
+                    <Badge className="w-fit mt-1 sm:mt-0">2021 - 2024</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Currently pursuing a degree in Informatics Engineering, focusing on software development and web
-                    technologies.
+                    Focused on software development, database management, and web technologies.
                   </p>
                 </CardContent>
               </Card>
-
               <Card className="shadow-sm transition-transform duration-300 hover:shadow-md hover:-translate-y-1">
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                     <div>
-                      <CardTitle className="text-xl font-bold">SMK Miftahul Jannnah</CardTitle>
+                      <CardTitle className="text-xl font-bold">APEKI Tumba TVET School</CardTitle>
                       <CardDescription className="text-base font-medium mt-1">
-                        Teknik Komputer dan Jaringan (Computer Engineering and Networking)
+                        A2, In Software Development
                       </CardDescription>
                     </div>
-                    <Badge className="w-fit mt-1 sm:mt-0">2019 - 2022</Badge>
+                    <Badge className="w-fit mt-1 sm:mt-0">2019 - 2021</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Completed vocational education in Computer Engineering and Networking, building a strong foundation
-                    in technical skills.
+                    Completed vocational education in software development.
                   </p>
                 </CardContent>
               </Card>
@@ -421,7 +441,7 @@ export default function Home() {
                     </Button>
                     <div>
                       <p className="font-semibold text-base">Email</p>
-                      <p className="text-sm text-muted-foreground">holiq.ibrahim376@gmail.com</p>
+                      <p className="text-sm text-muted-foreground">pascope250@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -430,7 +450,7 @@ export default function Home() {
                     </Button>
                     <div>
                       <p className="font-semibold text-base">Phone</p>
-                      <p className="text-sm text-muted-foreground">+6282298249439</p>
+                      <p className="text-sm text-muted-foreground">+250-781-495-385 / +250-736-781-948</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -439,32 +459,21 @@ export default function Home() {
                     </Button>
                     <div>
                       <p className="font-semibold text-base">Location</p>
-                      <p className="text-sm text-muted-foreground">Tangerang, Indonesia</p>
+                      <p className="text-sm text-muted-foreground">Kigali, Rwanda</p>
                     </div>
                   </div>
                   <div className="pt-4">
-                    <p className="font-semibold text-base mb-3">Social Profiles</p>
-                    <div className="flex gap-3">
-                      <Link href="https://github.com/holiq" target="_blank" rel="noopener noreferrer">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
-                        >
-                          <Github className="h-5 w-5" />
-                          <span className="sr-only">GitHub</span>
-                        </Button>
-                      </Link>
-                      <Link href="https://linkedin.com/in/holiq-ibrahim" target="_blank" rel="noopener noreferrer">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full transition-all duration-300 hover:bg-accent hover:scale-110"
-                        >
-                          <Linkedin className="h-5 w-5" />
-                          <span className="sr-only">LinkedIn</span>
-                        </Button>
-                      </Link>
+                    <p className="font-semibold text-base mb-3">Reference</p>
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <div>
+                        <span className="font-semibold">Funfu CEO:</span> IZERE Roger<br />
+                        Phone: +8613626690114
+                      </div>
+                      <div>
+                        <span className="font-semibold">Hdevtech. / CEO:</span><br />
+                        Phone: +250724270103<br />
+                        Email: 627672419@qq.com
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -475,7 +484,7 @@ export default function Home() {
                   <CardDescription className="text-base">I'll get back to you as soon as possible</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <form className="space-y-5">
+                  <form className="space-y-5" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <label htmlFor="name" className="text-sm font-medium">
@@ -483,7 +492,10 @@ export default function Home() {
                         </label>
                         <input
                           id="name"
+                          value={form.name}
+                          onChange={handleChange}
                           placeholder="Your name"
+                          required
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                       </div>
@@ -494,10 +506,25 @@ export default function Home() {
                         <input
                           id="email"
                           type="email"
+                          value={form.email}
+                          onChange={handleChange}
                           placeholder="Your email"
+                          required
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="phone" className="text-sm font-medium">
+                        Tel:
+                      </label>
+                      <input
+                        id="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="Phone Number"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="subject" className="text-sm font-medium">
@@ -505,7 +532,10 @@ export default function Home() {
                       </label>
                       <input
                         id="subject"
+                        value={form.subject}
+                        onChange={handleChange}
                         placeholder="Message subject"
+                        required
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </div>
@@ -515,16 +545,27 @@ export default function Home() {
                       </label>
                       <textarea
                         id="message"
+                        value={form.message}
+                        onChange={handleChange}
                         placeholder="Your message"
                         rows={4}
+                        required
                         className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </div>
+                    {error && <div className="text-red-600 text-sm">{error}</div>}
+                    {success && <div className="text-green-600 text-sm">{success}</div>}
+                    <ReCAPTCHA
+                      sitekey="YOUR_RECAPTCHA_SITE_KEY" // <-- replace with your site key
+                      onChange={handleRecaptcha}
+                      className="my-2"
+                    />
                     <Button
                       type="submit"
                       className="w-full transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md"
+                      disabled={loading}
                     >
-                      Send Message
+                      {loading ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 </CardContent>
@@ -536,7 +577,7 @@ export default function Home() {
       <footer className="border-t py-6 md:py-8">
         <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} Holiq Ibrahim. All rights reserved.
+            &copy; {new Date().getFullYear()} Pascal Ndacyayisenga. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
