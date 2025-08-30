@@ -1,89 +1,93 @@
-  "use client";
-  import { ModeToggle } from "@/components/mode-toggle";
-  import { Button } from "@/components/ui/button";
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-  } from "@/components/ui/card";
-  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-  import { Badge } from "@/components/ui/badge";
-  import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-  import {
-    Github,
-    Linkedin,
-    Mail,
-    MapPin,
-    Phone,
-    ExternalLink,
-  } from "lucide-react";
-  import Link from "next/link";
-  import ProjectCard from "@/components/project-card";
-  import ExperienceCard from "@/components/experience-card";
-  import SkillBadge from "@/components/skill-badge";
-  import { useState } from "react";
-  import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
-  import { toast } from "react-hot-toast";
-  export default function Home() {
-    const { executeRecaptcha } = useGoogleReCaptcha();
-    // Add these states at the top of your component
-    const [form, setForm] = useState({
-      name: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: "",
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+"use client";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Github,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  ExternalLink,
+} from "lucide-react";
+import Link from "next/link";
+import ProjectCard from "@/components/project-card";
+import ExperienceCard from "@/components/experience-card";
+import SkillBadge from "@/components/skill-badge";
+import { useState } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { toast } from "react-hot-toast";
+export default function Home() {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  // Add these states at the top of your component
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-    const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-      setForm({ ...form, [e.target.id]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!executeRecaptcha) {
+      setError("Recaptcha not yet ready.");
+      console.warn("Recaptcha not yet ready");
+      return;
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      setSuccess(null);
+    // now safe to call
+    const token = await executeRecaptcha("contact_us");
 
-      // Simple validation
-      if (!form.name || !form.email || !form.subject || !form.message) {
-        setError("Please fill in all required fields.");
-        return;
-      }
-      setLoading(true);
-      toast.loading("Sending message...", { id: "sending-message" });
-      try {
-        if(!executeRecaptcha){
-          setError("Please verify that you are not a robot.");
-          return;
-        }
+    // Simple validation
+    if (!form.name || !form.email || !form.subject || !form.message) {
+      setError("Please fill in all required fields.");
+      return;
+    }
 
-        const token = await executeRecaptcha("contact_us");
-        const res = await fetch("/api/contact", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, token }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          toast.success("Message sent successfully!");
-          setSuccess("Message sent successfully!");
-          setForm({ name: "", email: "", phone: "", subject: "", message: "" });
-        } else {
-          setError(data.message || "Failed to send message.");
-        }
-      } catch {
-        setError("Failed to send message.");
+    toast.loading("Sending message...", { id: "sending-message" });
+    setLoading(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, token }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Message sent successfully!");
+        setSuccess("Message sent successfully!");
+        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+      } else {
+        setError(data.message || "Failed to send message.");
       }
-      setLoading(false);
-      toast.dismiss("sending-message");
-    };
+    } catch {
+      setError("Failed to send message.");
+    }
+    setLoading(false);
+    toast.dismiss("sending-message");
+  };
 
   return (
     <>
@@ -736,11 +740,11 @@
                       {success && (
                         <div className="text-green-600 text-sm">{success}</div>
                       )}
-                     
+
                       <Button
                         type="submit"
                         className="w-full transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md"
-                        disabled={loading}
+                        disabled={!executeRecaptcha || loading}
                       >
                         {loading ? "Sending..." : "Send Message"}
                       </Button>
