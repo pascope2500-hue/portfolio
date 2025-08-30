@@ -12,7 +12,7 @@ import ExperienceCard from "@/components/experience-card"
 import SkillBadge from "@/components/skill-badge"
 import { useState } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
-
+import Toast, { toast} from "react-hot-toast"
 export default function Home() {
   // Add these states at the top of your component
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
@@ -45,6 +45,7 @@ export default function Home() {
     }
 
     setLoading(true);
+    toast.loading("Sending message...", { id: "sending-message" });
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -53,6 +54,7 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok) {
+        toast.success("Message sent successfully!");
         setSuccess("Message sent successfully!");
         setForm({ name: "", email: "", phone: "", subject: "", message: "" });
         setRecaptchaToken(null);
@@ -63,9 +65,11 @@ export default function Home() {
       setError("Failed to send message.");
     }
     setLoading(false);
+    toast.dismiss("sending-message");
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
@@ -556,7 +560,7 @@ export default function Home() {
                     {error && <div className="text-red-600 text-sm">{error}</div>}
                     {success && <div className="text-green-600 text-sm">{success}</div>}
                     <ReCAPTCHA
-                      sitekey="YOUR_RECAPTCHA_SITE_KEY" // <-- replace with your site key
+                      sitekey="RECAPTCHA_SITE_KEY" // <-- replace with your site key
                       onChange={handleRecaptcha}
                       className="my-2"
                     />
@@ -590,5 +594,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   )
 }
